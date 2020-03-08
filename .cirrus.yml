@@ -1,0 +1,5 @@
+container:
+  image: gradle:jdk11
+
+compile_task:
+  build_script: gradle build
