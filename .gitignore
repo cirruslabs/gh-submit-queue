@@ -1,4 +1,10 @@
 .idea
 *.iml
+
 .gradle
 build
+
+# for running locally
+*.pem
+test.env
+production.env
