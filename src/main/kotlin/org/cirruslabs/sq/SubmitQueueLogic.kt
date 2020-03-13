@@ -56,7 +56,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
       } else {
         defaultStatus.copy(
           state = StatusState.success,
-          description = "All checks are passing!"
+          description = "Ready to merge!"
         )
       }
     }
