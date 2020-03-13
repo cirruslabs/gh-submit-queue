@@ -88,4 +88,12 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     }
     return Conclusion(completed = true)
   }
+
+  suspend fun checkReferenceAndSetForSHA(installationId: Long, owner: String, repo: String, ref: String, sha: String) {
+    val checkSuites = api.listCheckSuites(installationId, owner, repo, ref)
+    val overallConclusion = overallConclusion(checkSuites)
+    val status = commitStatusFromConclusion(overallConclusion)
+    println("Checks completed for $owner/$repo@$ref in ${status.state} state!")
+    api.setStatus(installationId, owner, repo, sha, status)
+  }
 }

@@ -1,5 +1,6 @@
 package org.cirruslabs.sq
 
+import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.client.HttpClient
@@ -25,6 +26,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.time.withTimeout
 import org.cirruslabs.sq.github.hooks.CheckSuiteEvent
+import org.cirruslabs.sq.github.hooks.PullRequestEvent
 import org.cirruslabs.sq.github.impl.GitHubAPIImpl
 import org.cirruslabs.sq.github.impl.GitHubAccessTokenManagerImpl
 import org.cirruslabs.sq.github.impl.GithubAppSecretsImpl
@@ -91,34 +93,54 @@ fun main() {
           }
         }
 
-        when (event) {
-          "check_suite" -> {
-            val eventPayload = call.receive<CheckSuiteEvent>()
-            val owner = eventPayload.repository.owner.login
-            val name = eventPayload.repository.name
-
-            println("Processing $event event for $owner/$name repository...")
-            try {
-              // GH has a 10 seconds timeout for the delivering. Reserve 1 second for Network and stuff.
-              withTimeout(Duration.ofSeconds(9)) {
-                logic.checkReference(eventPayload.installation.id, owner, name, eventPayload.check_suite.head_branch)
-              }
-              call.respondText("Processed!")
-            } catch (e: TimeoutCancellationException) {
-              // this is not too bad ¯\_(ツ)_/¯
-              // can happen because of the large amount of PRs to update
-              //but the a lot of very recent PRs should be updated within the timeout
-              call.respondText("Timed out!")
-            }
+        try {
+          // GH has a 10 seconds timeout for the delivering. Reserve 1 second for network and stuff.
+          withTimeout(Duration.ofSeconds(9)) {
+            processEvent(logic, event, deliveryId, call)
           }
-          else -> {
-            val message = "Event '$event' of $deliveryId delivery is not supported!"
-            println(message)
-            call.respondText(message)
-          }
+        } catch (e: TimeoutCancellationException) {
+          // this is not too bad ¯\_(ツ)_/¯
+          // can happen because of the large amount of PRs to update
+          // but the a lot of very recent PRs should be updated within the timeout
+          // and we are running as a lambda so we can't have a state like a worker queue to update PRs async
+          call.respondText("Timed out!")
         }
       }
     }
   }
   server.start(wait = true)
+}
+
+private suspend fun processEvent(logic: SubmitQueueLogic, event: String, deliveryId: String, call: ApplicationCall): Unit {
+  when (event) {
+    "check_suite" -> {
+      val eventPayload = call.receive<CheckSuiteEvent>()
+      val owner = eventPayload.repository.owner.login
+      val name = eventPayload.repository.name
+
+      println("Processing check suite ${eventPayload.check_suite.id} for $owner/$name repository...")
+      logic.checkReference(eventPayload.installation.id, owner, name, eventPayload.check_suite.head_branch)
+      call.respondText("Processed!")
+    }
+    "pull_request" -> {
+      val eventPayload = call.receive<PullRequestEvent>()
+      val owner = eventPayload.repository.owner.login
+      val name = eventPayload.repository.name
+      val ref = eventPayload.pull_request.base.ref
+      val sha = eventPayload.pull_request.head.sha
+
+      if (eventPayload.action == "opened") {
+        println("Processing creation of PR #${eventPayload.number} for $owner/$name repository...")
+        logic.checkReferenceAndSetForSHA(eventPayload.installation.id, owner, name, ref, sha)
+      } else {
+        println("No need to process action ${eventPayload.action} of PR #${eventPayload.number} for $owner/$name repository...")
+      }
+      call.respondText("Processed!")
+    }
+    else -> {
+      val message = "Event '$event' of $deliveryId delivery is not supported!"
+      println(message)
+      call.respondText(message)
+    }
+  }
 }

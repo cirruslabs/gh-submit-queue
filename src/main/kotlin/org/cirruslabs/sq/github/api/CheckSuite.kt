@@ -2,6 +2,7 @@ package org.cirruslabs.sq.github.api
 
 
 data class CheckSuite(
+  val id: Long,
   val head_branch: String,
   val head_sha: String,
   val check_runs_url: String,
