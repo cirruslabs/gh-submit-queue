@@ -1,8 +1,8 @@
 package org.cirruslabs.sq.model
 
 data class Conclusion(
-  val allCompleted: Boolean,
-  val failureDetails: ConclusionDetails? = null
+    val completed: Boolean,
+    val failureDetails: ConclusionDetails? = null
 )
 
 data class ConclusionDetails(

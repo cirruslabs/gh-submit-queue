@@ -13,7 +13,6 @@ import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.header
 import io.ktor.request.receive
-import io.ktor.request.receiveText
 import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
@@ -23,11 +22,14 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.time.withTimeout
 import org.cirruslabs.sq.github.hooks.CheckSuiteEvent
 import org.cirruslabs.sq.github.impl.GitHubAPIImpl
 import org.cirruslabs.sq.github.impl.GitHubAccessTokenManagerImpl
 import org.cirruslabs.sq.github.impl.GithubAppSecretsImpl
 import org.cirruslabs.sq.utils.constantTimeEquals
+import java.time.Duration
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
@@ -72,13 +74,15 @@ fun main() {
       }
       post("/hooks/github") {
         val deliveryId = call.request.header("X-GitHub-Delivery")?.toLowerCase()
+          ?: throw IllegalStateException("No delivery id!")
         val event = call.request.header("X-GitHub-Event")?.toLowerCase()
+          ?: throw IllegalStateException("No event name!")
 
         println("Receiving $deliveryId delivery for $event event...")
 
         val signature = call.request.header("X-Hub-Signature")?.toLowerCase()
         if (signature != null) {
-          val expectedSignature = githubSecrets.calculateSignature(call.receive<ByteArray>())
+          val expectedSignature = githubSecrets.calculateSignature(call.receive())
           if (!expectedSignature.constantTimeEquals(signature)) {
             System.err.println("Failed to verify signature! $expectedSignature != $signature")
             throw IllegalStateException("Wrong signature!")
@@ -94,10 +98,23 @@ fun main() {
             val name = eventPayload.repository.name
 
             println("Processing $event event for $owner/$name repository...")
-            call.respond(logic.checkReference(eventPayload.installation.id, owner, name, eventPayload.check_suite.head_branch))
+            try {
+              // GH has a 10 seconds timeout for the delivering. Reserve 1 second for Network and stuff.
+              withTimeout(Duration.ofSeconds(9)) {
+                logic.checkReference(eventPayload.installation.id, owner, name, eventPayload.check_suite.head_branch)
+              }
+              call.respondText("Processed!")
+            } catch (e: TimeoutCancellationException) {
+              // this is not too bad ¯\_(ツ)_/¯
+              // can happen because of the large amount of PRs to update
+              //but the a lot of very recent PRs should be updated within the timeout
+              call.respondText("Timed out!")
+            }
           }
           else -> {
-            println("Event '$event' of $deliveryId delivery is not supported!")
+            val message = "Event '$event' of $deliveryId delivery is not supported!"
+            println(message)
+            call.respondText(message)
           }
         }
       }

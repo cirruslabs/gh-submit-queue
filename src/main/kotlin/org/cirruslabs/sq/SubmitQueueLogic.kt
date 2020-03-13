@@ -2,6 +2,7 @@ package org.cirruslabs.sq
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filterNot
 import org.cirruslabs.sq.github.GitHubAPI
 import org.cirruslabs.sq.github.api.CheckSuite
 import org.cirruslabs.sq.github.api.CheckSuiteStatus
@@ -20,9 +21,9 @@ class SubmitQueueLogic(val api: GitHubAPI) {
   suspend fun checkReference(installationId: Long, owner: String, repo: String, ref: String) {
     val checkSuites = api.listCheckSuites(installationId, owner, repo, ref)
     val overallConclusion = overallConclusion(checkSuites)
-    if (!overallConclusion.allCompleted && overallConclusion.failureDetails == null) {
-      println("Seems checks are still running for $owner/$repo@$ref");
-      return;
+    if (!overallConclusion.completed && overallConclusion.failureDetails == null) {
+      println("Seems checks are still running for $owner/$repo@$ref")
+      return
     }
     val params = mapOf(
       "base" to ref,
@@ -30,8 +31,9 @@ class SubmitQueueLogic(val api: GitHubAPI) {
       "sort" to "updated",
       "direction" to "desc"
     )
-    // todo: offload to a channel
     val status = commitStatusFromConclusion(overallConclusion)
+    println("Checks completed for $owner/$repo@$ref in ${status.state} state!")
+    // make it parallel once https://github.com/Kotlin/kotlinx.coroutines/issues/1147 is released
     api.listPullRequests(installationId, owner, repo, params).collect { pr ->
       println("Updating PR #${pr.number} of $owner/$repo to ${status.state} state...")
       api.setStatus(installationId, owner, repo, pr.head.sha, status)
@@ -44,17 +46,17 @@ class SubmitQueueLogic(val api: GitHubAPI) {
       description = "Checks are running...",
       state = StatusState.pending
     );
-    if (conclusion.allCompleted) {
+    if (conclusion.completed) {
       return if (conclusion.failureDetails != null) {
         defaultStatus.copy(
-            state = StatusState.failure,
-            description = "${conclusion.failureDetails.appName} ${conclusion.failureDetails.status}",
-            target_url = conclusion.failureDetails.url
+          state = StatusState.failure,
+          description = "${conclusion.failureDetails.appName} ${conclusion.failureDetails.status}",
+          target_url = conclusion.failureDetails.url
         )
       } else {
         defaultStatus.copy(
-            state = StatusState.success,
-            description = "All checks are passing!"
+          state = StatusState.success,
+          description = "All checks are passing!"
         )
       }
     }
@@ -67,10 +69,11 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     checkSuitesFlow.collect { checkSuite ->
       checkSuites.add(checkSuite)
     }
+    println("Found ${checkSuites.size} check suites: ${checkSuites}")
     // first check if there is any suite that completed but not in a successful state to report it ASAP
     checkSuites.firstOrNull { check -> check.notSuccessful }?.also { failedCheck ->
       return Conclusion(
-        allCompleted = false,
+        completed = true,
         failureDetails = ConclusionDetails(failedCheck.app.name, failedCheck.check_runs_url, failedCheck.conclusion?.name
           ?: "failed")
       )
@@ -80,9 +83,9 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     // let's check if any of them are still running e.g. no in completed state
     for (checkSuite in checkSuites) {
       if (checkSuite.status != CheckSuiteStatus.completed) {
-        return Conclusion(allCompleted = false);
+        return Conclusion(completed = false);
       }
     }
-    return Conclusion(allCompleted = true)
+    return Conclusion(completed = true)
   }
 }

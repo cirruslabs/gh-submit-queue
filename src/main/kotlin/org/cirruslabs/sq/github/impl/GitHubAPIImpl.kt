@@ -9,7 +9,10 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.utils.EmptyContent
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.util.KtorExperimentalAPI
+import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -57,6 +60,8 @@ class GitHubAPIImpl constructor(
       body = body
     ) {
       authorize(installationId)
+      // always post JSON
+      contentType(ContentType.Application.Json)
       apply(block)
     }
   }
@@ -119,10 +124,16 @@ class GitHubAPIImpl constructor(
   }
 
   override suspend fun setStatus(installationId: Long, owner: String, repo: String, sha: String, status: Status): Status {
-    return post(
+    val response = post(
       installationId = installationId,
       path = "/repos/$owner/$repo/statuses/$sha",
       body = status
-    ).call.receive()
+    )
+
+    if (response.status != HttpStatusCode.Created) {
+      System.err.println("Failed to create status $status for $owner/$repo@sha: ${response.content.readUTF8Line()}")
+      throw IllegalStateException("Failed to create status $status for $owner/$repo@sha!")
+    }
+    return response.call.receive()
   }
 }
