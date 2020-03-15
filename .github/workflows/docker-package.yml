@@ -10,15 +10,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@latest
-        - uses: actions/setup-java@v1
-          with:
-            java-version: '11'
-        - name: Test
-          run: ./gradlew test
-        - name: Build and Deploy via Jib
-          run: ./gradlew jib
-          env:
-            DOCKER_USERNAME: ${{ github.actor }}
-            DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@latest
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: Test
+        run: ./gradlew test
+      - name: Build and Deploy via Jib
+        run: ./gradlew jib
+        env:
+          DOCKER_USERNAME: ${{ github.actor }}
+          DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
