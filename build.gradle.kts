@@ -16,7 +16,7 @@ jib {
 }
 
 application {
-  mainClassName = "org.cirruslabs.sq.AppKt"
+  mainClassName = "io.ktor.server.netty.DevelopmentEngine"
 }
 
 tasks.withType<Jar> {
@@ -45,8 +45,13 @@ dependencies {
 
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+  testImplementation("io.mockk:mockk:1.9.3")
+  testImplementation("com.google.code.gson:gson:2.8.6")
+  testImplementation("com.google.guava:guava:28.2-jre")
+
+  testImplementation("io.ktor:ktor-client-logging-jvm:$ktorVersion")
+  testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 }

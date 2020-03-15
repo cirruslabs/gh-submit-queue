@@ -1,8 +1,8 @@
 package org.cirruslabs.sq.github.api
 
 data class Status(
-  val state: StatusState,
-  val description: String,
+  val state: StatusState = StatusState.success,
+  val description: String = "",
   val target_url: String = "",
   val context: String = "submit-queue"
 )
