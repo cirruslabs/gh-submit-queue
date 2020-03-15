@@ -58,7 +58,7 @@ class AppKtTest {
       coVerifyOrder {
         mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
         mockAPI.listPullRequests(102236L, "cirruslabs", "sandbox", mapOf("base" to "master", "state" to "open", "sort" to "updated", "direction" to "desc"))
-        val expectedStatus = Status(StatusState.success, "Ready to merge!")
+        val expectedStatus = Status(StatusState.failure, "Cirrus CI failure", target_url = "https://api.github.com/repos/cirruslabs/sandbox/check-suites/517820163/check-runs")
         mockAPI.setStatus(102236L, "cirruslabs", "sandbox", "990e3dc578b8b1607e28dfa2d5353a276741d77c", expectedStatus)
       }
 

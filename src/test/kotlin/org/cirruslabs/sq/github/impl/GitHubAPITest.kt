@@ -40,7 +40,7 @@ class GitHubAPITest {
         ref = "e8ea21f5940a9ddd74b566138753435a17579530"
       )
       val suite = suites.first { it.app.name == "Cirrus CI" }
-      assertEquals(CheckSuiteConclusion.success, suite.conclusion)
+      assertEquals(CheckSuiteConclusion.failure, suite.conclusion)
     }
   }
 
