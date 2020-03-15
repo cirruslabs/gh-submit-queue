@@ -10,8 +10,13 @@ repositories {
 
 jib {
   to {
-    image = "gcr.io/submit-queue-app/gh-submit-queue"
-    tags = mutableSetOf("latest")
+    image = "docker.pkg.github.com/cirruslabs/gh-submit-queue/app"
+    val githubRef = System.getenv().getOrDefault("GITHUB_REF", "refs/heads/master")
+    tags = mutableSetOf(if (githubRef.startsWith("refs/tags/")) githubRef.removePrefix("refs/tags/") else "latest")
+    auth {
+      username = System.getProperty("DOCKER_USERNAME")
+      password = System.getProperty("DOCKER_PASSWORD")
+    }
   }
 }
 
