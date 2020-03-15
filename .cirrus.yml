@@ -7,7 +7,7 @@ task:
     folder: ~/.gradle/caches
     reupload_on_changes: false
     fingerprint_script: cat build.gradle.kts && cat gradle/wrapper/gradle-wrapper.properties
-  build_script: gradle jibDockerBuild
+  build_script: gradle classes testClasses
   check_script: gradle check
   always:
     junit_result_artifacts:
