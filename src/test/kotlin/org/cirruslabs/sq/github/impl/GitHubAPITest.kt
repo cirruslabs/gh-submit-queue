@@ -35,9 +35,9 @@ class GitHubAPITest {
     runBlocking {
       val suites = api.listCheckSuites(
         installationId = 0L,
-        owner = "flutter",
-        repo = "flutter",
-        ref = "1ca4815035e6aa14831d8148062c732be3a458c4"
+        owner = "cirruslabs",
+        repo = "sandbox",
+        ref = "e8ea21f5940a9ddd74b566138753435a17579530"
       )
       val suite = suites.first { it.app.name == "Cirrus CI" }
       assertEquals(CheckSuiteConclusion.success, suite.conclusion)

@@ -32,7 +32,7 @@ class AppKtTest {
   }
 
   @Test
-  fun checkSuite() {
+  fun checkSuiteSinglePR() {
     runTest { mockAPI ->
       val checkSuitesResponse = Resources.getResource("check_suite/single_pr/check-suites.response.json").readText()
       val prsResponse = Resources.getResource("check_suite/single_pr/pulls.response.json").readText()
@@ -60,6 +60,36 @@ class AppKtTest {
         mockAPI.listPullRequests(102236L, "cirruslabs", "sandbox", mapOf("base" to "master", "state" to "open", "sort" to "updated", "direction" to "desc"))
         val expectedStatus = Status(StatusState.success, "Ready to merge!")
         mockAPI.setStatus(102236L, "cirruslabs", "sandbox", "990e3dc578b8b1607e28dfa2d5353a276741d77c", expectedStatus)
+      }
+
+      confirmVerified(mockAPI)
+    }
+  }
+
+  @Test
+  fun prOpened() {
+    runTest { mockAPI ->
+      val checkSuitesResponse = Resources.getResource("pull_request/check-suites.response.json").readText()
+      val hookPayload = Resources.getResource("pull_request/opened.hook.json").readBytes()
+
+      coEvery {
+        mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
+      } returns gson.fromJson(checkSuitesResponse, CheckSuitesResponse::class.java).check_suites.asFlow()
+      coEvery {
+        mockAPI.setStatus(102236L, "cirruslabs", "sandbox", any(), any())
+      } returns Status()
+
+      handleRequest(HttpMethod.Post, "/hooks/github") {
+        addHeader("X-GitHub-Delivery", "test")
+        addHeader("X-GitHub-Event", "pull_request")
+        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+        setBody(hookPayload)
+      }
+
+      coVerifyOrder {
+        mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
+        val expectedStatus = Status(StatusState.failure, "Cirrus CI failure", target_url = "https://api.github.com/repos/cirruslabs/sandbox/check-suites/517820163/check-runs")
+        mockAPI.setStatus(102236L, "cirruslabs", "sandbox", "5687afbadb49ea7fd8fca74efbf88e7bb48e123a", expectedStatus)
       }
 
       confirmVerified(mockAPI)

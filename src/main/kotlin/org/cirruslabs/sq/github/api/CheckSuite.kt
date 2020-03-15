@@ -11,9 +11,9 @@ data class CheckSuite(
   val app: App
 ) {
 
-  val notSuccessful: Boolean =
+  val successful: Boolean =
     status == CheckSuiteStatus.completed &&
-      conclusion != CheckSuiteConclusion.neutral && conclusion != CheckSuiteConclusion.success
+      (conclusion == CheckSuiteConclusion.neutral || conclusion == CheckSuiteConclusion.success)
 }
 
 enum class CheckSuiteStatus {
