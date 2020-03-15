@@ -69,6 +69,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     checkSuitesFlow.collect { checkSuite ->
       checkSuites.add(checkSuite)
     }
+    println("Found ${checkSuites.size} check suites: ${checkSuites}")
     // first check if there is any suite that completed but not in a successful state to report it ASAP
     checkSuites.firstOrNull { check -> !check.successful }?.also { failedCheck ->
       return Conclusion(
