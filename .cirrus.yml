@@ -1,6 +1,16 @@
 container:
   image: gradle:jdk11
 
-compile_task:
-  build_script: gradle build jibDockerBuild
+task:
+  name: Tests
+  gradle_cache:
+    folder: ~/.gradle/caches
+    reupload_on_changes: false
+    fingerprint_script: cat build.gradle.kts && cat gradle/wrapper/gradle-wrapper.properties
+  build_script: gradle jibDockerBuild
   check_script: gradle check
+  always:
+    junit_result_artifacts:
+      path: "**/test-results/**/*.xml"
+      format: junit
+      type: text/xml
