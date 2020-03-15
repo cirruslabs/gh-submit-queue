@@ -31,7 +31,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
       "sort" to "updated",
       "direction" to "desc"
     )
-    val status = commitStatusFromConclusion(overallConclusion)
+    val status = commitStatusFromConclusion(overallConclusion, ref)
     println("Checks completed for $owner/$repo@$ref in ${status.state} state!")
     // make it parallel once https://github.com/Kotlin/kotlinx.coroutines/issues/1147 is released
     api.listPullRequests(installationId, owner, repo, params).collect { pr ->
@@ -40,7 +40,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     }
   }
 
-  private fun commitStatusFromConclusion(conclusion: Conclusion): Status {
+  private fun commitStatusFromConclusion(conclusion: Conclusion, ref: String): Status {
     val defaultStatus = Status(
       context = "submit-queue",
       description = "Checks are running...",
@@ -50,7 +50,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
       return if (conclusion.failureDetails != null) {
         defaultStatus.copy(
           state = StatusState.failure,
-          description = "${conclusion.failureDetails.appName} ${conclusion.failureDetails.status}",
+          description = "${conclusion.failureDetails.appName} ${conclusion.failureDetails.status} on $ref",
           target_url = conclusion.failureDetails.url
         )
       } else {
@@ -69,7 +69,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     checkSuitesFlow.collect { checkSuite ->
       checkSuites.add(checkSuite)
     }
-    println("Found ${checkSuites.size} check suites: ${checkSuites}")
+    println("Found ${checkSuites.size} check suites: $checkSuites")
     // first check if there is any suite that completed but not in a successful state to report it ASAP
     checkSuites.firstOrNull { check -> !check.successful }?.also { failedCheck ->
       return Conclusion(
@@ -92,7 +92,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
   suspend fun checkReferenceAndSetForSHA(installationId: Long, owner: String, repo: String, ref: String, sha: String) {
     val checkSuites = api.listCheckSuites(installationId, owner, repo, ref)
     val overallConclusion = overallConclusion(checkSuites)
-    val status = commitStatusFromConclusion(overallConclusion)
+    val status = commitStatusFromConclusion(overallConclusion, ref)
     println("Checks completed for $owner/$repo@$ref in ${status.state} state!")
     api.setStatus(installationId, owner, repo, sha, status)
   }
