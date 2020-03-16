@@ -1,5 +1,8 @@
 name: Push Docker Image
 
+# Use action since Apps don't have access to Packages yet
+# Plus it's good to see how Actions are slow because of Java instalation and no caching
+
 on:
   push:
     branches:

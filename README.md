@@ -1,4 +1,4 @@
-# GitHub App to Introduce Submit Queue
+# GitHub App to Introduce Submit Queue 🚂
 
 [![Build Status](https://api.cirrus-ci.com/github/cirruslabs/gh-submit-queue.svg)](https://cirrus-ci.com/github/cirruslabs/gh-submit-queue)
 
@@ -6,13 +6,15 @@ Blocks PR merges when check suites of the latest commit on a target branch are f
 
 ![Example](images/SubmitQueue.png)
 
+**Note:** initially [it was a GitHub Action](https://github.com/cirrus-actions/branch-guard) but unfortunetly Actions have permission issues when executed for PRs from forks.
+
 # Installation Instructions
 
-Install the app [here](https://github.com/apps/submit-queue).
+Install the app [here](https://github.com/apps/submit-queue) for your github.com projects **free of charge**.
 
 ## GitHub Enterprise
 
-You can run the App on it's own. The setup is pretty straightforward. 
+You can run your own instance of the App for your GHE installations. The setup is pretty straightforward. 
 
 Use `docker.pkg.github.com/cirruslabs/gh-submit-queue/app:latest` Docker image with the 
 following environment variables:
