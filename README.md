@@ -1,6 +1,10 @@
 # GitHub App to Introduce Submit Queue
 
-Blocks PR merges when check suites of the latest commit on a target branch are failing.
+[![Build Status](https://api.cirrus-ci.com/github/cirruslabs/gh-submit-queue.svg)](https://cirrus-ci.com/github/cirruslabs/gh-submit-queue)
+
+Blocks PR merges when check suites of the latest commit on a target branch are failing:
+
+![Example](images/SubmitQueue.png)
 
 # Installation Instructions
 
