@@ -10,11 +10,14 @@ import io.ktor.client.features.logging.Logging
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.cirruslabs.sq.github.api.CheckSuiteConclusion
 import org.cirruslabs.sq.github.api.PullRequestState
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
@@ -35,12 +38,17 @@ class GitHubAPITest {
     runBlocking {
       val suites = api.listCheckSuites(
         installationId = 0L,
-        owner = "cirruslabs",
-        repo = "sandbox",
-        ref = "e8ea21f5940a9ddd74b566138753435a17579530"
-      )
-      val suite = suites.first { it.app.name == "Cirrus CI" }
-      assertEquals(CheckSuiteConclusion.failure, suite.conclusion)
+        owner = "flutter",
+        repo = "flutter",
+        ref = "acd51a726e7c2eeb0e077890cd7b2f4f3bbc4931"
+      ).toList()
+      val cirrusSuite = suites.find { it.app.name == "Cirrus CI" }
+      assertNotNull(cirrusSuite)
+      assertEquals(CheckSuiteConclusion.success, cirrusSuite.conclusion)
+
+      val wipSuite = suites.find { it.app.name == "WIP" }
+      assertNotNull(wipSuite)
+      assertTrue(wipSuite.notInitialized)
     }
   }
 

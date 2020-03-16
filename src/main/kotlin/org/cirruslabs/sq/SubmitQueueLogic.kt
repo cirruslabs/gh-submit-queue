@@ -63,10 +63,10 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     return defaultStatus;
   }
 
-  private suspend fun overallConclusion(checkSuitesFlow: Flow<CheckSuite>): Conclusion {
+  suspend fun overallConclusion(checkSuitesFlow: Flow<CheckSuite>): Conclusion {
     // collect all check suites since we need to iterate twice
     val checkSuites = LinkedList<CheckSuite>()
-    checkSuitesFlow.collect { checkSuite ->
+    checkSuitesFlow.filterNot { it.notInitialized }.collect { checkSuite ->
       checkSuites.add(checkSuite)
     }
     println("Found ${checkSuites.size} check suites: $checkSuites")
