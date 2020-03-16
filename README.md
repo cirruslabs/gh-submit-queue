@@ -10,11 +10,11 @@ Blocks PR merges when check suites of the latest commit on a target branch are f
 
 # Installation Instructions
 
-Install the app [here](https://github.com/apps/submit-queue).
+Install the app [here](https://github.com/apps/submit-queue) for your github.com projects **free of charge**.
 
 ## GitHub Enterprise
 
-You can run the App on it's own. The setup is pretty straightforward. 
+You can run your own instance of the App for your GHE installations. The setup is pretty straightforward. 
 
 Use `docker.pkg.github.com/cirruslabs/gh-submit-queue/app:latest` Docker image with the 
 following environment variables:
