@@ -2,19 +2,12 @@ package org.cirruslabs.sq.github.impl
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import io.ktor.util.InternalAPI
-import io.ktor.util.decodeBase64
-import io.ktor.util.decodeBase64Bytes
-import io.ktor.util.encodeBase64
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemReader
 import org.cirruslabs.sq.github.GithubAppSecrets
 import org.joda.time.DateTime
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.InputStreamReader
-import java.io.StringReader
-import java.nio.charset.Charset
 import java.security.KeyFactory
 import java.security.Security
 import java.security.interfaces.RSAPrivateKey
