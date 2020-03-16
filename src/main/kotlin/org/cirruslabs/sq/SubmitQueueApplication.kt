@@ -51,7 +51,7 @@ class SubmitQueueApplication(
       exception<Throwable> { cause ->
         // log errors
         cause.printStackTrace()
-        call.respond(HttpStatusCode.InternalServerError)
+        call.respond(HttpStatusCode.InternalServerError, cause.message ?: "")
       }
     }
     routing {
