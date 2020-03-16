@@ -11,8 +11,8 @@ data class CheckSuite(
   val app: App
 ) {
 
-  val successful: Boolean =
-    status == CheckSuiteStatus.completed &&
+  val successful: Boolean
+    get() = status == CheckSuiteStatus.completed &&
       (conclusion == CheckSuiteConclusion.neutral || conclusion == CheckSuiteConclusion.success)
 }
 

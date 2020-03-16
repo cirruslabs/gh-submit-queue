@@ -74,8 +74,11 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     checkSuites.firstOrNull { check -> !check.successful }?.also { failedCheck ->
       return Conclusion(
         completed = true,
-        failureDetails = ConclusionDetails(failedCheck.app.name, failedCheck.check_runs_url, failedCheck.conclusion?.name
-          ?: "failed")
+        failureDetails = ConclusionDetails(
+          failedCheck.app.name,
+          failedCheck.check_runs_url,
+          failedCheck.conclusion?.name ?: "failed"
+        )
       )
     }
 
