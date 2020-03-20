@@ -3,7 +3,7 @@ package org.cirruslabs.sq.github.api
 
 data class CheckSuite(
   val id: Long,
-  val head_branch: String,
+  val head_branch: String?, // Seems like events for re-runs has it 'null`.
   val head_sha: String,
   val check_runs_url: String,
   val status: CheckSuiteStatus?,

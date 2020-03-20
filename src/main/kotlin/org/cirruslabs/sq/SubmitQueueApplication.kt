@@ -101,7 +101,8 @@ class SubmitQueueApplication(
         val name = eventPayload.repository.name
 
         println("Processing check suite ${eventPayload.check_suite.id} for $owner/$name repository...")
-        logic.checkReference(eventPayload.installation.id, owner, name, eventPayload.check_suite.head_branch)
+        val branch = eventPayload.check_suite.head_branch ?: eventPayload.repository.default_branch
+        logic.checkReference(eventPayload.installation.id, owner, name, branch)
         call.respondText("Processed!")
       }
       "pull_request" -> {
@@ -111,7 +112,7 @@ class SubmitQueueApplication(
         val ref = eventPayload.pull_request.base.ref
         val sha = eventPayload.pull_request.head.sha
 
-        if (eventPayload.action == "opened") {
+        if (eventPayload.action == "opened" || eventPayload.action == "reopened") {
           println("Processing creation of PR #${eventPayload.number} for $owner/$name repository...")
           logic.checkReferenceAndSetForSHA(eventPayload.installation.id, owner, name, ref, sha)
         } else {
