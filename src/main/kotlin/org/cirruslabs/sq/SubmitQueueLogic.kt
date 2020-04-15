@@ -3,6 +3,7 @@ package org.cirruslabs.sq
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import org.cirruslabs.sq.github.GitHubAPI
 import org.cirruslabs.sq.github.api.CheckSuite
 import org.cirruslabs.sq.github.api.CheckSuiteStatus
@@ -19,8 +20,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
    * @param ref can be a SHA, branch name, or a tag name
    */
   suspend fun checkReference(installationId: Long, owner: String, repo: String, ref: String) {
-    val checkSuites = api.listCheckSuites(installationId, owner, repo, ref)
-    val overallConclusion = overallConclusion(checkSuites)
+    val overallConclusion = overallConclusion(installationId, owner, repo, ref)
     if (!overallConclusion.completed && overallConclusion.failureDetails == null) {
       println("Seems checks are still running for $owner/$repo@$ref")
       return
@@ -63,7 +63,8 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     return defaultStatus;
   }
 
-  suspend fun overallConclusion(checkSuitesFlow: Flow<CheckSuite>): Conclusion {
+  suspend fun overallConclusion(installationId: Long, owner: String, repo: String, ref: String): Conclusion {
+    val checkSuitesFlow = api.listCheckSuites(installationId, owner, repo, ref)
     // collect all check suites since we need to iterate twice
     val checkSuites = LinkedList<CheckSuite>()
     checkSuitesFlow.filterNot { it.notInitialized }.collect { checkSuite ->
@@ -72,11 +73,16 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     println("Found ${checkSuites.size} check suites: $checkSuites")
     // first check if there is any suite that completed but not in a successful state to report it ASAP
     checkSuites.firstOrNull { check -> !check.successful }?.also { failedCheck ->
+      val failedRun = try {
+        api.listCheckRuns(installationId, owner, repo, failedCheck.id).first { !it.successful }
+      } catch (ex: NoSuchElementException) {
+        null
+      }
       return Conclusion(
         completed = true,
         failureDetails = ConclusionDetails(
           failedCheck.app.name,
-          failedCheck.check_runs_url,
+          failedRun?.html_url ?: failedCheck.check_runs_url,
           failedCheck.conclusion?.name ?: "failed"
         )
       )
@@ -93,8 +99,7 @@ class SubmitQueueLogic(val api: GitHubAPI) {
   }
 
   suspend fun checkReferenceAndSetForSHA(installationId: Long, owner: String, repo: String, ref: String, sha: String) {
-    val checkSuites = api.listCheckSuites(installationId, owner, repo, ref)
-    val overallConclusion = overallConclusion(checkSuites)
+    val overallConclusion = overallConclusion(installationId, owner, repo, ref)
     val status = commitStatusFromConclusion(overallConclusion, ref)
     println("Checks completed for $owner/$repo@$ref in ${status.state} state!")
     api.setStatus(installationId, owner, repo, sha, status)

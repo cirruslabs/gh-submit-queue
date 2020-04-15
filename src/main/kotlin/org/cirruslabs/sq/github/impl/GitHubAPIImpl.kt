@@ -20,10 +20,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import org.cirruslabs.sq.github.GitHubAPI
 import org.cirruslabs.sq.github.GitHubAccessTokenManager
-import org.cirruslabs.sq.github.api.CheckSuite
-import org.cirruslabs.sq.github.api.CheckSuitesResponse
-import org.cirruslabs.sq.github.api.PullRequest
-import org.cirruslabs.sq.github.api.Status
+import org.cirruslabs.sq.github.api.*
 
 
 @KtorExperimentalAPI
@@ -89,6 +86,25 @@ class GitHubAPIImpl constructor(
           parameter("page", page.toString())
         }
         emitAll(response.call.receive<CheckSuitesResponse>().check_suites.asFlow())
+        if (noMorePages(response)) {
+          break
+        }
+      }
+    }
+  }
+
+  override suspend fun listCheckRuns(installationId: Long, owner: String, repo: String, checkSuiteId: Long): Flow<CheckRun> {
+    return flow {
+      val infinitePagesSequence = generateSequence(1) { it + 1 }
+      for (page in infinitePagesSequence) {
+        val response = get(
+          installationId = installationId,
+          path = "/repos/$owner/$repo/check-suites/$checkSuiteId/check-runs"
+        ) {
+          accept(CONTENT_TYPE_ANTIOPE_PREVIEW)
+          parameter("page", page.toString())
+        }
+        emitAll(response.call.receive<CheckRunsResponse>().check_runs.asFlow())
         if (noMorePages(response)) {
           break
         }

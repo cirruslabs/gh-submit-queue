@@ -12,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import org.cirruslabs.sq.github.api.CheckRunConclusion
 import org.cirruslabs.sq.github.api.CheckSuiteConclusion
 import org.cirruslabs.sq.github.api.PullRequestState
 import org.junit.Test
@@ -49,6 +50,23 @@ class GitHubAPITest {
       val wipSuite = suites.find { it.app.name == "WIP" }
       assertNotNull(wipSuite)
       assertTrue(wipSuite.notInitialized)
+    }
+  }
+
+  @Test
+  fun listCheckRuns() {
+    runBlocking {
+      val runs = api.listCheckRuns(
+        installationId = 0L,
+        owner = "flutter",
+        repo = "plugins",
+        checkSuiteId = 600645028
+      ).toList()
+      val failedRun = runs.find { !it.successful }
+      assertNotNull(failedRun)
+      assertEquals("analyze", failedRun.name)
+      assertEquals(CheckRunConclusion.failure, failedRun.conclusion)
+      assertEquals("https://github.com/flutter/plugins/runs/589861315", failedRun.html_url)
     }
   }
 
