@@ -63,7 +63,7 @@ class GitHubAccessTokenManagerImpl @KtorExperimentalAPI constructor(
     val response = httpClient.post<HttpResponse>(
       scheme = baseAPIScheme,
       host = baseAPIHost,
-      path = "/installations/$installationId/access_tokens"
+      path = "/app/installations/$installationId/access_tokens"
     ) {
       header(HttpHeaders.Authorization, "Bearer $jwt")
       accept(CONTENT_TYPE_MACHINE_MAN_PREVIEW)
