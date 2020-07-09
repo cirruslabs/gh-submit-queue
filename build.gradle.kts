@@ -1,7 +1,7 @@
 plugins {
   application
-  kotlin("jvm") version "1.3.70"
-  id("com.google.cloud.tools.jib") version "2.1.0"
+  kotlin("jvm") version "1.3.72"
+  id("com.google.cloud.tools.jib") version "2.4.0"
 }
 
 repositories {
@@ -39,11 +39,11 @@ tasks.withType<Jar> {
   }
 }
 
-val ktorVersion = "1.3.1"
+val ktorVersion = "1.3.2"
 
 dependencies {
   implementation("com.auth0:java-jwt:3.10.0")
-  implementation("com.github.ben-manes.caffeine:caffeine:2.8.1")
+  implementation("com.github.ben-manes.caffeine:caffeine:2.8.5")
   implementation("io.ktor:ktor-client-core:$ktorVersion")
   implementation("io.ktor:ktor-client-cio:$ktorVersion")
   implementation("io.ktor:ktor-client-gson:$ktorVersion")
@@ -58,9 +58,9 @@ dependencies {
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-  testImplementation("io.mockk:mockk:1.9.3")
+  testImplementation("io.mockk:mockk:1.10.0")
   testImplementation("com.google.code.gson:gson:2.8.6")
-  testImplementation("com.google.guava:guava:28.2-jre")
+  testImplementation("com.google.guava:guava:29.0-jre")
 
   testImplementation("io.ktor:ktor-client-logging-jvm:$ktorVersion")
   testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
