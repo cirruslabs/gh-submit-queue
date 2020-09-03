@@ -11,7 +11,7 @@ repositories {
 jib {
   to {
     if (System.getenv().containsKey("GITHUB_ACTIONS")) {
-      image = "docker.pkg.github.com/cirruslabs/gh-submit-queue/app"
+      image = "ghcr.io/cirruslabs/gh-submit-queue"
       val githubRef = System.getenv().getOrDefault("GITHUB_REF", "refs/heads/master")
       tags = mutableSetOf(if (githubRef.startsWith("refs/tags/")) githubRef.removePrefix("refs/tags/") else "latest")
       auth {
