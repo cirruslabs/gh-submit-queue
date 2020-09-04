@@ -9,6 +9,11 @@ repositories {
 }
 
 jib {
+  container {
+    labels = mapOf(
+      "org.opencontainers.image.source" to "https://github.com/cirruslabs/gh-submit-queue/"
+    )
+  }
   to {
     if (System.getenv().containsKey("GITHUB_ACTIONS")) {
       image = "ghcr.io/cirruslabs/gh-submit-queue"
