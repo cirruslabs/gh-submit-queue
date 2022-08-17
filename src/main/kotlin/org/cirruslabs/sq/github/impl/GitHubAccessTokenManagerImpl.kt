@@ -3,28 +3,41 @@ package org.cirruslabs.sq.github.impl
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
-import io.ktor.client.HttpClient
-import io.ktor.client.call.receive
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.request.accept
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
 import org.cirruslabs.sq.github.GitHubAccessTokenManager
 import org.cirruslabs.sq.github.GithubAppSecrets
 import org.cirruslabs.sq.github.api.AccessTokenResponse
 
-class GitHubAccessTokenManagerImpl @KtorExperimentalAPI constructor(
+class GitHubAccessTokenManagerImpl constructor(
   private val baseAPIScheme: String = "https",
   private val baseAPIHost: String = "api.github.com",
   private val secrets: GithubAppSecrets,
   private val httpClient: HttpClient = HttpClient(CIO) {
-    install(JsonFeature)
+    expectSuccess = false // to have 404 and etc
+    engine {
+      endpoint {
+        connectAttempts = 3
+      }
+    }
+    install(ContentNegotiation) {
+      gson {
+        setPrettyPrinting()
+        setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+      }
+    }
+    install(HttpTimeout) {
+      requestTimeoutMillis = 60_000
+    }
+    install(UserAgent) {
+      agent = "CirrusCI"
+    }
   }
 ) : GitHubAccessTokenManager {
   companion object {
@@ -60,10 +73,8 @@ class GitHubAccessTokenManagerImpl @KtorExperimentalAPI constructor(
 
   private suspend fun acquireAccessTokenImpl(installationId: Long): AccessTokenResponse {
     val jwt = secrets.signJWT()
-    val response = httpClient.post<HttpResponse>(
-      scheme = baseAPIScheme,
-      host = baseAPIHost,
-      path = "/app/installations/$installationId/access_tokens"
+    val response = httpClient.post(
+      "$baseAPIScheme://$baseAPIHost/app/installations/$installationId/access_tokens"
     ) {
       header(HttpHeaders.Authorization, "Bearer $jwt")
       accept(CONTENT_TYPE_MACHINE_MAN_PREVIEW)
@@ -71,7 +82,7 @@ class GitHubAccessTokenManagerImpl @KtorExperimentalAPI constructor(
     if (response.status != HttpStatusCode.Created) {
       throw IllegalStateException("Failed to acquire an access token for installation $installationId!")
     }
-    val accessTokenResponse = response.call.receive<AccessTokenResponse>()
+    val accessTokenResponse = response.body<AccessTokenResponse>()
     println("Got a token for $installationId that expires in ${accessTokenResponse.expiresIn.toMinutes()} minutes.")
     return accessTokenResponse
   }

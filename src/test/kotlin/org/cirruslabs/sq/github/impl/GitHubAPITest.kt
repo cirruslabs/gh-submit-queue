@@ -2,13 +2,9 @@ package org.cirruslabs.sq.github.impl
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.logging.DEFAULT
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logger
-import io.ktor.client.features.logging.Logging
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.gson.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -20,13 +16,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
 class GitHubAPITest {
   private val api = GitHubAPIImpl(
     TestGitHubAccessTokenManager,
     httpClient = HttpClient(CIO) {
-      install(JsonFeature)
+      install(ContentNegotiation) {
+        gson()
+      }
       install(Logging) {
         logger = Logger.DEFAULT
         level = LogLevel.ALL

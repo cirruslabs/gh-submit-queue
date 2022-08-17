@@ -1,7 +1,7 @@
 plugins {
   application
-  kotlin("jvm") version "1.3.72"
-  id("com.google.cloud.tools.jib") version "2.4.0"
+  kotlin("jvm") version "1.7.10"
+  id("com.google.cloud.tools.jib") version "3.2.1"
 }
 
 repositories {
@@ -10,9 +10,7 @@ repositories {
 
 jib {
   container {
-    labels = mapOf(
-      "org.opencontainers.image.source" to "https://github.com/cirruslabs/gh-submit-queue/"
-    )
+    labels.put("org.opencontainers.image.source", "https://github.com/cirruslabs/gh-submit-queue/")
   }
   to {
     if (System.getenv().containsKey("GITHUB_ACTIONS")) {
@@ -44,28 +42,33 @@ tasks.withType<Jar> {
   }
 }
 
-val ktorVersion = "1.3.2"
+val ktorVersion = "2.1.0"
 
 dependencies {
-  implementation("com.auth0:java-jwt:3.10.0")
-  implementation("com.github.ben-manes.caffeine:caffeine:2.8.5")
+  implementation("com.auth0:java-jwt:4.0.0")
+  implementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
   implementation("io.ktor:ktor-client-core:$ktorVersion")
   implementation("io.ktor:ktor-client-cio:$ktorVersion")
   implementation("io.ktor:ktor-client-gson:$ktorVersion")
-  implementation("io.ktor:ktor-gson:$ktorVersion")
+  implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+  implementation("io.ktor:ktor-serialization-gson:$ktorVersion")
+  implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
   implementation("io.ktor:ktor-server-core:$ktorVersion")
   implementation("io.ktor:ktor-server-netty:$ktorVersion")
-  implementation("joda-time:joda-time:2.10.5")
-  implementation("org.bouncycastle:bcprov-jdk15on:1.64")
+  implementation("io.ktor:ktor-server-default-headers:$ktorVersion")
+  implementation("io.ktor:ktor-server-double-receive:$ktorVersion")
+  implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+  implementation("joda-time:joda-time:2.11.0")
+  implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
   implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-  testImplementation("io.mockk:mockk:1.10.0")
-  testImplementation("com.google.code.gson:gson:2.8.6")
-  testImplementation("com.google.guava:guava:29.0-jre")
+  testImplementation("io.mockk:mockk:1.12.5")
+  testImplementation("com.google.code.gson:gson:2.9.1")
+  testImplementation("com.google.guava:guava:31.1-jre")
 
   testImplementation("io.ktor:ktor-client-logging-jvm:$ktorVersion")
   testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")

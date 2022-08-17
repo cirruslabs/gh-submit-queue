@@ -1,24 +1,15 @@
 package org.cirruslabs.sq
 
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCall
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.DoubleReceive
-import io.ktor.features.StatusPages
-import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.header
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.routing
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.ktor.serialization.gson.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.doublereceive.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.plugins.defaultheaders.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.time.withTimeout
 import org.cirruslabs.sq.github.GitHubAPI
@@ -28,8 +19,6 @@ import org.cirruslabs.sq.github.hooks.PullRequestEvent
 import org.cirruslabs.sq.utils.constantTimeEquals
 import java.time.Duration
 
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
 class SubmitQueueApplication(
   private val api: GitHubAPI,
   private val secrets: GithubAppSecrets? = null
@@ -38,17 +27,14 @@ class SubmitQueueApplication(
     val logic = SubmitQueueLogic(api)
 
     install(DefaultHeaders)
-    install(DoubleReceive) {
-      // because we need to double receive in case of signature verification
-      receiveEntireContent = true
-    }
+    install(DoubleReceive)
     install(ContentNegotiation) {
       gson {
         setPrettyPrinting()
       }
     }
     install(StatusPages) {
-      exception<Throwable> { cause ->
+      exception<Throwable> { call: ApplicationCall, cause: Throwable ->
         // log errors
         cause.printStackTrace()
         call.respond(HttpStatusCode.InternalServerError, cause.message ?: "")

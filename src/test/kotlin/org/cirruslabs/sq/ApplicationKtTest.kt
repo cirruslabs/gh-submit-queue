@@ -19,9 +19,7 @@ import org.cirruslabs.sq.github.api.*
 import org.junit.Test
 
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
-class AppKtTest {
+class ApplicationKtTest {
   val gson = Gson()
 
   fun runTest(test: TestApplicationEngine.(mockAPI: GitHubAPI) -> Unit) {
