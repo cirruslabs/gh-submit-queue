@@ -45,7 +45,7 @@ class GitHubAPITest {
 
       val wipSuite = suites.find { it.app.name == "WIP" }
       assertNotNull(wipSuite)
-      assertTrue(wipSuite.notInitialized)
+      assertTrue(wipSuite.successful)
     }
   }
 
@@ -74,14 +74,14 @@ class GitHubAPITest {
         owner = "flutter",
         repo = "flutter",
         params = mapOf(
-          "base" to "master",
+          "base" to "main",
           "state" to "closed",
           "sort" to "created",
           "direction" to "asc"
         )
       )
       val oldestPR = prs.first()
-      assertEquals(1, oldestPR.number)
+      assertEquals(103481, oldestPR.number)
       assertEquals(PullRequestState.closed, oldestPR.state)
     }
   }

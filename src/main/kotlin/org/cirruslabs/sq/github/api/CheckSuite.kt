@@ -17,7 +17,7 @@ data class CheckSuite(
 
   val successful: Boolean
     get() = status == CheckSuiteStatus.completed &&
-      (conclusion == CheckSuiteConclusion.neutral || conclusion == CheckSuiteConclusion.success)
+      (conclusion == CheckSuiteConclusion.neutral || conclusion == CheckSuiteConclusion.success || conclusion == CheckSuiteConclusion.stale)
 }
 
 enum class CheckSuiteStatus {

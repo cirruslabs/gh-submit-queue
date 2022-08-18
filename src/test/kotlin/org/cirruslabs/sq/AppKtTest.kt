@@ -5,13 +5,8 @@ import com.google.gson.Gson
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
-import io.ktor.server.testing.TestApplicationEngine
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.server.testing.*
 import io.mockk.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOf
 import org.cirruslabs.sq.github.GitHubAPI
@@ -19,12 +14,12 @@ import org.cirruslabs.sq.github.api.*
 import org.junit.Test
 
 
-class ApplicationKtTest {
+class AppKtTest {
   val gson = Gson()
 
   fun runTest(test: TestApplicationEngine.(mockAPI: GitHubAPI) -> Unit) {
     val mockAPI = mockkClass(GitHubAPI::class)
-    withTestApplication({ mainWithApp(SubmitQueueApplication(mockAPI)) }) {
+    withTestApplication({ configureRoutingWithApp(mockAPI) }) {
       test(mockAPI)
     }
   }

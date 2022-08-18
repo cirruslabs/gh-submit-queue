@@ -1,10 +1,17 @@
 package org.cirruslabs.sq
 
-import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.netty.handler.codec.DefaultHeaders
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.defaultheaders.*
+import io.ktor.server.plugins.doublereceive.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import org.cirruslabs.sq.github.GitHubAPI
 import org.cirruslabs.sq.github.GithubAppSecrets
 import org.cirruslabs.sq.github.impl.GitHubAPIImpl
 import org.cirruslabs.sq.github.impl.GitHubAccessTokenManagerImpl
@@ -25,9 +32,28 @@ fun Application.configureRouting() {
     secrets = githubSecrets
   )
   val api = GitHubAPIImpl(tokenManager, gitHubScheme, gitHubHost)
-  mainWithApp(SubmitQueueApplication(api, githubSecrets))
+  configureRoutingWithApp(api, githubSecrets)
 }
 
-fun Application.mainWithApp(app: SubmitQueueApplication) {
-  app.apply { configureRouting() }
+fun Application.configureRoutingWithApp(
+  api: GitHubAPI,
+  githubSecrets: GithubAppSecrets? = null
+) {
+  install(DefaultHeaders)
+  install(DoubleReceive)
+  install(ContentNegotiation) {
+    gson {
+      setPrettyPrinting()
+    }
+  }
+  install(StatusPages) {
+    exception<Throwable> { call: ApplicationCall, cause: Throwable ->
+      // log errors
+      cause.printStackTrace()
+      call.respond(HttpStatusCode.InternalServerError, cause.message ?: "")
+    }
+  }
+  routing {
+    SubmitQueueApplication(api, githubSecrets).setup(this)
+  }
 }
