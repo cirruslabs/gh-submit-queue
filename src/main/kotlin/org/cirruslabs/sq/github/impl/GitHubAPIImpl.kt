@@ -157,8 +157,8 @@ class GitHubAPIImpl constructor(
     )
 
     if (response.status != HttpStatusCode.Created) {
-      System.err.println("Failed to create status $status for $owner/$repo@sha: ${response.bodyAsText()}")
-      throw IllegalStateException("Failed to create status $status for $owner/$repo@sha!")
+      System.err.println("Failed to create status $status for $owner/$repo@$sha: ${response.bodyAsText()}")
+      throw IllegalStateException("Failed to create status $status for $owner/$repo@$sha!")
     }
     return response.body()
   }

@@ -36,7 +36,11 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     // make it parallel once https://github.com/Kotlin/kotlinx.coroutines/issues/1147 is released
     api.listPullRequests(installationId, owner, repo, params).collect { pr ->
       println("Updating PR #${pr.number} of $owner/$repo to ${status.state} state...")
-      api.setStatus(installationId, owner, repo, pr.head.sha, status)
+      try {
+        api.setStatus(installationId, owner, repo, pr.head.sha, status)
+      } catch (ex: Throwable) {
+        ex.printStackTrace()
+      }
     }
   }
 
@@ -102,6 +106,10 @@ class SubmitQueueLogic(val api: GitHubAPI) {
     val overallConclusion = overallConclusion(installationId, owner, repo, ref)
     val status = commitStatusFromConclusion(overallConclusion, ref)
     println("Checks completed for $owner/$repo@$ref in ${status.state} state!")
-    api.setStatus(installationId, owner, repo, sha, status)
+    try {
+      api.setStatus(installationId, owner, repo, sha, status)
+    } catch (ex: Throwable) {
+      ex.printStackTrace()
+    }
   }
 }
