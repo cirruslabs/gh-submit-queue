@@ -47,6 +47,7 @@ class GitHubAPIImpl constructor(
   companion object {
     private val CONTENT_TYPE_ANTIOPE_PREVIEW = ContentType("application", "vnd.github.antiope-preview+json")
     private val CONTENT_TYPE_SAILOR_V_PREVIEW = ContentType("application", "vnd.github.sailor-v-preview+json")
+    private val CONTENT_TYPE_SHADOW_CAT_PREVIEW = ContentType("application", "vnd.github.shadow-cat-preview+json")
   }
 
   private suspend fun get(installationId: Long, path: String, block: HttpRequestBuilder.() -> Unit = {}): HttpResponse {
@@ -188,5 +189,26 @@ class GitHubAPIImpl constructor(
       throw IllegalStateException("Failed to create status $status for $owner/$repo@$sha!")
     }
     return response.body()
+  }
+
+  override suspend fun prInfo(installationId: Long, owner: String, repo: String, prNumber: Int): PullRequest? {
+    val response = get(
+      installationId = installationId,
+      path = "/repos/${owner}/${repo}/pulls/$prNumber"
+    ) {
+      accept(CONTENT_TYPE_SHADOW_CAT_PREVIEW)
+    }
+    return when (response.status.value) {
+      404 -> null
+      200 -> {
+        response.body<PullRequest>()
+      }
+
+      else -> {
+        val content = response.bodyAsText()
+        System.err.println("Failed to get PR info for $prNumber: ${response.status}\n$content")
+        throw IllegalStateException("Failed to get files for PR $prNumber!")
+      }
+    }
   }
 }

@@ -6,7 +6,7 @@ Blocks PR merges when check suites of the latest commit on a target branch are f
 
 ![Example](images/SubmitQueue.png)
 
-**Note:** initially [it was a GitHub Action](https://github.com/cirrus-actions/branch-guard) but unfortunetly Actions have permission issues when executed for PRs from forks.
+**Note:** that you can manually refresh Submit Queue status for a PR by commenting `/sq poke`.
 
 # Installation Instructions
 

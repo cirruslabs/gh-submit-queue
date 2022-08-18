@@ -9,6 +9,7 @@ import kotlinx.coroutines.time.withTimeout
 import org.cirruslabs.sq.github.GitHubAPI
 import org.cirruslabs.sq.github.GithubAppSecrets
 import org.cirruslabs.sq.github.hooks.CheckSuiteEvent
+import org.cirruslabs.sq.github.hooks.IssueCommentedEvent
 import org.cirruslabs.sq.github.hooks.PullRequestEvent
 import org.cirruslabs.sq.utils.constantTimeEquals
 import java.time.Duration
@@ -89,6 +90,21 @@ class SubmitQueueApplication(
           println("No need to process action ${eventPayload.action} of PR #${eventPayload.number} for $owner/$name repository...")
         }
         call.respondText("Processed!")
+      }
+
+      "issue_commented" -> {
+        val eventPayload = call.receive<IssueCommentedEvent>()
+        val installationId = eventPayload.installation.id
+        val owner = eventPayload.repository.owner.login
+        val name = eventPayload.repository.name
+        val prNumber = eventPayload.issue.number
+
+        if (eventPayload.comment.body.contains("/sq poke")) {
+          val pullRequest = api.prInfo(installationId, owner, name, prNumber) ?: return call.respondText("Processed!")
+          val ref = pullRequest.base.ref
+          val sha = pullRequest.head.sha
+          logic.checkReferenceAndSetForSHA(installationId, owner, name, ref, sha)
+        }
       }
 
       else -> {

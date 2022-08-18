@@ -109,4 +109,49 @@ class AppKtTest {
       confirmVerified(mockAPI)
     }
   }
+
+  @Test
+  fun issuePoked() {
+    runTest { mockAPI ->
+      val checkSuitesResponse = Resources.getResource("pull_request/check-suites.response.json").readText()
+      val checkRunsResponse = Resources.getResource("pull_request/check-runs.response.json").readText()
+      val prInfoResponse = Resources.getResource("issue_comment/prInfo.response.json").readText()
+      val hookPayload = Resources.getResource("issue_comment/created.hook.json").readBytes()
+
+      coEvery {
+        mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
+      } returns gson.fromJson(checkSuitesResponse, CheckSuitesResponse::class.java).check_suites.asFlow()
+      coEvery {
+        mockAPI.listCheckRuns(102236L, "cirruslabs", "sandbox", 517820163)
+      } returns gson.fromJson(checkRunsResponse, CheckRunsResponse::class.java).check_runs.asFlow()
+      coEvery {
+        mockAPI.prInfo(102236L, "cirruslabs", "sandbox", 9)
+      } returns gson.fromJson(prInfoResponse, PullRequest::class.java)
+      coEvery {
+        mockAPI.setStatus(102236L, "cirruslabs", "sandbox", any(), any())
+      } returns Status()
+
+      handleRequest(HttpMethod.Post, "/hooks/github") {
+        addHeader("X-GitHub-Delivery", "test")
+        addHeader("X-GitHub-Event", "issue_commented")
+        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+        setBody(hookPayload)
+      }
+
+      coVerifyOrder {
+        mockAPI.prInfo(102236L, "cirruslabs", "sandbox", 9)
+        mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
+        mockAPI.listCheckRuns(102236L, "cirruslabs", "sandbox", 517820163)
+        val expectedStatus = Status(
+          StatusState.failure,
+          "Cirrus CI failure on master",
+          target_url = "https://github.com/cirruslabs/sandbox/runs/504360682"
+        )
+        mockAPI.setStatus(102236L, "cirruslabs", "sandbox", "12f50eac2752768d664c9c1fc2cf99917438af56", expectedStatus)
+      }
+
+      confirmVerified(mockAPI)
+    }
+  }
+
 }
