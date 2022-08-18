@@ -2,9 +2,7 @@ package org.cirruslabs.sq
 
 import com.google.common.io.Resources
 import com.google.gson.Gson
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
+import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.flow.asFlow
@@ -55,8 +53,17 @@ class AppKtTest {
       coVerifyOrder {
         mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
         mockAPI.listCheckRuns(102236L, "cirruslabs", "sandbox", 517820163)
-        mockAPI.listPullRequests(102236L, "cirruslabs", "sandbox", mapOf("base" to "master", "state" to "open", "sort" to "updated", "direction" to "desc"))
-        val expectedStatus = Status(StatusState.failure, "Cirrus CI failure on master", target_url = "https://github.com/cirruslabs/sandbox/runs/504360682")
+        mockAPI.listPullRequests(
+          102236L,
+          "cirruslabs",
+          "sandbox",
+          mapOf("base" to "master", "state" to "open", "sort" to "updated", "direction" to "desc")
+        )
+        val expectedStatus = Status(
+          StatusState.failure,
+          "Cirrus CI failure on master",
+          target_url = "https://github.com/cirruslabs/sandbox/runs/504360682"
+        )
         mockAPI.setStatus(102236L, "cirruslabs", "sandbox", "990e3dc578b8b1607e28dfa2d5353a276741d77c", expectedStatus)
       }
 
@@ -91,7 +98,11 @@ class AppKtTest {
       coVerifyOrder {
         mockAPI.listCheckSuites(102236L, "cirruslabs", "sandbox", "master")
         mockAPI.listCheckRuns(102236L, "cirruslabs", "sandbox", 517820163)
-        val expectedStatus = Status(StatusState.failure, "Cirrus CI failure on master", target_url = "https://github.com/cirruslabs/sandbox/runs/504360682")
+        val expectedStatus = Status(
+          StatusState.failure,
+          "Cirrus CI failure on master",
+          target_url = "https://github.com/cirruslabs/sandbox/runs/504360682"
+        )
         mockAPI.setStatus(102236L, "cirruslabs", "sandbox", "5687afbadb49ea7fd8fca74efbf88e7bb48e123a", expectedStatus)
       }
 

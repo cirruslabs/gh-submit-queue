@@ -1,7 +1,6 @@
 package org.cirruslabs.sq.github.impl
 
 import com.auth0.jwt.algorithms.Algorithm
-import com.google.common.io.Resources
 import org.junit.Test
 import kotlin.test.assertEquals
 

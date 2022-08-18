@@ -22,6 +22,7 @@ fun main() {
     configureRouting()
   }.start(wait = true)
 }
+
 fun Application.configureRouting() {
   val githubSecrets: GithubAppSecrets = GithubAppSecretsImpl.initialize()
   val gitHubScheme: String = System.getenv().getOrDefault("GITHUB_API_SCHEME", "https")

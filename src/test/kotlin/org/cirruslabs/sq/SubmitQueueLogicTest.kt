@@ -30,10 +30,12 @@ class SubmitQueueLogicTest {
   @Test
   fun overallConclusion() {
     runBlocking {
-      val conclusion = logic.overallConclusion(installationId = 0L,
+      val conclusion = logic.overallConclusion(
+        installationId = 0L,
         owner = "flutter",
         repo = "flutter",
-        ref = "acd51a726e7c2eeb0e077890cd7b2f4f3bbc4931")
+        ref = "acd51a726e7c2eeb0e077890cd7b2f4f3bbc4931"
+      )
       assertEquals(Conclusion(true), conclusion)
     }
   }

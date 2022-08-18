@@ -10,9 +10,6 @@ import io.ktor.client.statement.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
-import io.ktor.util.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emitAll
@@ -61,7 +58,12 @@ class GitHubAPIImpl constructor(
     }
   }
 
-  private suspend fun post(installationId: Long, path: String, body: Any = EmptyContent, block: HttpRequestBuilder.() -> Unit = {}): HttpResponse {
+  private suspend fun post(
+    installationId: Long,
+    path: String,
+    body: Any = EmptyContent,
+    block: HttpRequestBuilder.() -> Unit = {}
+  ): HttpResponse {
     return httpClient.post(
       "$baseAPIScheme://$baseAPIHost/${path.removePrefix("/")}"
     ) {
@@ -84,7 +86,12 @@ class GitHubAPIImpl constructor(
   private fun noMorePages(response: HttpResponse) =
     response.headers.getAll(HttpHeaders.Link)?.size != 2
 
-  override suspend fun listCheckSuites(installationId: Long, owner: String, repo: String, ref: String): Flow<CheckSuite> {
+  override suspend fun listCheckSuites(
+    installationId: Long,
+    owner: String,
+    repo: String,
+    ref: String
+  ): Flow<CheckSuite> {
     return flow {
       val infinitePagesSequence = generateSequence(1) { it + 1 }
       for (page in infinitePagesSequence) {
@@ -103,7 +110,12 @@ class GitHubAPIImpl constructor(
     }
   }
 
-  override suspend fun listCheckRuns(installationId: Long, owner: String, repo: String, checkSuiteId: Long): Flow<CheckRun> {
+  override suspend fun listCheckRuns(
+    installationId: Long,
+    owner: String,
+    repo: String,
+    checkSuiteId: Long
+  ): Flow<CheckRun> {
     return flow {
       val infinitePagesSequence = generateSequence(1) { it + 1 }
       for (page in infinitePagesSequence) {
@@ -149,7 +161,13 @@ class GitHubAPIImpl constructor(
     }
   }
 
-  override suspend fun setStatus(installationId: Long, owner: String, repo: String, sha: String, status: Status): Status {
+  override suspend fun setStatus(
+    installationId: Long,
+    owner: String,
+    repo: String,
+    sha: String,
+    status: Status
+  ): Status {
     val response = post(
       installationId = installationId,
       path = "/repos/$owner/$repo/statuses/$sha",

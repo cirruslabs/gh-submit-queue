@@ -1,7 +1,5 @@
 package org.cirruslabs.sq
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import org.cirruslabs.sq.github.GitHubAPI

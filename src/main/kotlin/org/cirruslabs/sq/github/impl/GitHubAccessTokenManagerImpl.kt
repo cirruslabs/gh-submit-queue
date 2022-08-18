@@ -46,7 +46,12 @@ class GitHubAccessTokenManagerImpl constructor(
 
   private val accessTokenCache: Cache<Long, AccessTokenResponse> = Caffeine.newBuilder()
     .expireAfter(object : Expiry<Long, AccessTokenResponse> {
-      override fun expireAfterUpdate(key: Long, value: AccessTokenResponse, currentTime: Long, currentDuration: Long): Long {
+      override fun expireAfterUpdate(
+        key: Long,
+        value: AccessTokenResponse,
+        currentTime: Long,
+        currentDuration: Long
+      ): Long {
         return value.expiresIn.toNanos()
       }
 
@@ -54,7 +59,12 @@ class GitHubAccessTokenManagerImpl constructor(
         return value.expiresIn.toNanos()
       }
 
-      override fun expireAfterRead(key: Long, value: AccessTokenResponse, currentTime: Long, currentDuration: Long): Long {
+      override fun expireAfterRead(
+        key: Long,
+        value: AccessTokenResponse,
+        currentTime: Long,
+        currentDuration: Long
+      ): Long {
         return value.expiresIn.toNanos()
       }
     })
