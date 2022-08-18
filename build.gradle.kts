@@ -5,7 +5,11 @@ plugins {
 }
 
 repositories {
-  jcenter()
+  mavenCentral()
+}
+
+application {
+  mainClass.set("org.cirruslabs.sq.AppKt")
 }
 
 jib {
@@ -26,10 +30,6 @@ jib {
       tags = mutableSetOf("latest")
     }
   }
-}
-
-application {
-  mainClassName = "io.ktor.server.netty.DevelopmentEngine"
 }
 
 tasks.withType<Jar> {
