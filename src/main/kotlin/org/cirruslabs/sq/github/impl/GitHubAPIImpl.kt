@@ -102,6 +102,9 @@ class GitHubAPIImpl constructor(
           accept(CONTENT_TYPE_ANTIOPE_PREVIEW)
           parameter("page", page.toString())
         }
+        if (response.status != HttpStatusCode.OK) {
+          break
+        }
         emitAll(response.body<CheckSuitesResponse>().check_suites.asFlow())
         if (noMorePages(response)) {
           break
@@ -125,6 +128,9 @@ class GitHubAPIImpl constructor(
         ) {
           accept(CONTENT_TYPE_ANTIOPE_PREVIEW)
           parameter("page", page.toString())
+        }
+        if (response.status != HttpStatusCode.OK) {
+          break
         }
         emitAll(response.body<CheckRunsResponse>().check_runs.asFlow())
         if (noMorePages(response)) {
@@ -152,6 +158,9 @@ class GitHubAPIImpl constructor(
           params.forEach { (name, value) ->
             parameter(name, value)
           }
+        }
+        if (response.status != HttpStatusCode.OK) {
+          break
         }
         emitAll(response.body<Array<PullRequest>>().asFlow())
         if (noMorePages(response)) {
